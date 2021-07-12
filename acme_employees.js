@@ -97,7 +97,7 @@ const employees = [
         var finalObj={...employee}
       }
     }
-    function addEmployee(obj){
+    function addEmployee(obj){ //helper function
       let reports=[]
       for (let employee of employees){
         if(employee.managerId===obj.id){
@@ -106,7 +106,7 @@ const employees = [
       }
       obj.reports=reports
       if(obj.reports.length>0){
-        obj.reports.forEach(ele=>addEmployee(ele))
+        obj.reports.forEach(ele=>addEmployee(ele)) //recursive
       }
     }
     
@@ -176,15 +176,17 @@ console.log(JSON.stringify(generateManagementTree(employees), null, 2));
   spacer('displayManagementTree')
   //given a tree of employees, generate a display which displays the hierarchy
   
+  let n=0
   function displayManagementTree(managementTree){
-    let n=0
     let employeeName=managementTree.name 
     let dash=new Array(n).fill('-').join('')  
     console.log(`${dash}${employeeName} \n`) //base case
-    n+=1    //closure
+    n+=1  
     let subordinate=managementTree.reports
     if(subordinate){
-      subordinate.forEach(ele=>displayManagementTree(ele)) 
+    n+=1   //closure: enter the array, +1
+    subordinate.forEach(ele=>displayManagementTree(ele))  
+    n-=1  //closure: out of the array, -1
     }
     //recursive case
   }
@@ -264,5 +266,5 @@ console.log(JSON.stringify(generateManagementTree(employees), null, 2));
     }
 
      return newObj
-    }
-    /*
+  }
+    */
