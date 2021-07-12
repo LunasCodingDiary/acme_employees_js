@@ -38,6 +38,7 @@ const employees = [
              return item
              }
      }
+     return null //edge case 
     } 
  
  
@@ -66,10 +67,12 @@ const employees = [
   //given an employee and a list of employees, return a the management chain for that employee. The management chain starts from the employee with no manager with the passed in employees manager 
  
   function findManagementChainForEmployee(employee, employees){
-      let managerChain=[employee]
+      let managerChain=[]
+      managerChain.push(employee)
       while(findManagerFor(managerChain[0],employees)){  //while the manager exists
-        managerChain.push(findManagerFor(managerChain[0],employees));
+        managerChain.unshift(findManagerFor(managerChain[0],employees));
       }
+      managerChain.pop()
     return managerChain
 }
   
@@ -85,19 +88,36 @@ const employees = [
   */
   spacer('');
   
-  
   spacer('generateManagementTree')
   //given a list of employees, generate a tree like structure for the employees, starting with the employee who has no manager. Each employee will have a reports property which is an array of the employees who report directly to them.
+ 
   function generateManagementTree(employees){
-    let firstManagerName=findManagementChain(employees[0], employees)[0].name
-    for (let item in employees){
-    findManagerFor(item, employees).reports.push(item)
+    for (let employee of employees){
+      if(!employee.managerId){
+        var finalObj={...employee}
+      }
     }
-    return findEmployeeByName(firstManagerName, employees)
-}
+    function addEmployee(obj){
+      let reports=[]
+      for (let employee of employees){
+        if(employee.managerId===obj.id){
+          reports.push(employee)
+        }
+      }
+      obj.reports=reports
+      if(obj.reports.length>0){
+        obj.reports.forEach(ele=>addEmployee(ele))
+      }
+    }
+    
+    addEmployee(finalObj)
 
-  console.log(JSON.stringify(generateManagementTree(employees), null, 2));
-  /*
+    return finalObj
+  }
+  
+console.log(JSON.stringify(generateManagementTree(employees), null, 2));
+ 
+/*
   {
     "id": 1,
     "name": "moe",
@@ -151,21 +171,24 @@ const employees = [
     ]
   }
   */
-  spacer('');
-  
+
+  spacer('');  
   spacer('displayManagementTree')
   //given a tree of employees, generate a display which displays the hierarchy
   
   function displayManagementTree(managementTree){
     let n=0
-    let employeeName=managementTree.name   
-    console.log(`${n*"-"}${employeeName} \n`) //base case
+    let employeeName=managementTree.name 
+    let dash=new Array(n).fill('-').join('')  
+    console.log(`${dash}${employeeName} \n`) //base case
     n+=1    //closure
-    managementTree.reports.forEach(displayManagementTree(element))  //recursive case
+    let subordinate=managementTree.reports
+    if(subordinate){
+      subordinate.forEach(ele=>displayManagementTree(ele)) 
+    }
+    //recursive case
   }
-  
-  
-  
+
   displayManagementTree(generateManagementTree(employees));/*
   moe
   -larry
@@ -176,3 +199,70 @@ const employees = [
   ---harpo
   -lucy
   */
+
+
+
+    /*
+    bottom-up trials#1
+   
+    let newObj={}
+    for (let employee of employees){
+      var max=0
+      let numOfManager=findManagementChainForEmployee(employee, employees).length
+      employee["reports"]=[ ]
+      newObj[employee]=numOfManager
+      if(numOfManager>max){
+        max=numOfManager 
+      }
+    }
+    // construct the tree from those with most numOfManager; max=largest
+    while (max>0){
+      for(let item in newObj){
+       if (newObj[item]===max){
+           for(let item2 in newObj){
+             if(item2.id===item.managerId){
+              item2["reports"].push(item) //step#1:search for the direct root and attached it to the reports
+              delete newObj.item//step#2: delete the attached item
+              }
+             }
+           }
+        }
+        max-=1
+    }
+    return Object.keys(newObj)[0]
+
+    //bottom-up trial#2
+    var newObj={}
+    for (let item of employees){
+      newObj[item.id]=item
+    }
+   //help function to find the manager
+    function attachToManager(item,newObj){
+      if(item.managerId){ //it has a manager
+        for (let i in newObj){
+         if (i===item.managerId){
+          if(!newObj[i].reports){
+            newObj[i].reports=[] //create reports if havent
+           }
+           newObj[i].reports.push(item) //step#1:search for the direct root and attached it to the reports
+           delete newObj.item['id']//step#2: delete the attached item
+          }
+          else{
+            if(newObj[i].reports){
+            let lowObj={};
+            for (let item of newObj[i].reports){
+              lowObj[item.id]=item
+            }
+            attachToManager(item,lowObj) 
+           }  
+          }
+      }
+     }
+    }
+    for(let item of employees){
+    attachToManager(item,newObj)
+    }
+
+     return newObj
+    }
+    /*
